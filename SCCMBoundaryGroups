@@ -1,0 +1,69 @@
+select
+
+       a1.resourceid as 'Computer ResourceID',
+
+       a5.Name0 as 'Computer Name',
+
+       IP_Addresses0 as 'Computer IP Address',
+
+       CONVERT(bigint, CAST( PARSENAME( LEFT(IP_Addresses0, LEN('%.%.%.%.%.%.%') - patIndex(',', IP_Addresses0)) , 1 ) as int)) +
+
+       CONVERT(bigint, CAST( PARSENAME( LEFT(IP_Addresses0, LEN('%.%.%.%.%.%.%') - patIndex(',', IP_Addresses0)) , 2 ) as int)) * 256 +
+
+       CONVERT(bigint, CAST( PARSENAME( LEFT(IP_Addresses0, LEN('%.%.%.%.%.%.%') - patIndex(',', IP_Addresses0)) , 3 ) as int)) * 65536 +
+
+       CONVERT(bigint, CAST( PARSENAME( LEFT(IP_Addresses0, LEN('%.%.%.%.%.%.%') - patIndex(',', IP_Addresses0)) , 4 ) AS int )) * 16777216 as 'IP Numeric',
+
+       a2.BoundaryID as 'BoundaryID',
+
+       a2.name as 'Boundary Name',
+
+       a2.Value as 'Boundary Value',
+
+       a2.NumericValueLow as 'Boundary Numeric Value High',
+
+       a2.NumericValueHigh as 'Boundary Numeric Value Low',
+
+       a4.GroupID as 'GroupID',
+
+       a4.name as 'Boundary Group Name',
+
+       a4.Description as 'Boundary Group Description',
+
+       a7.ServerName as 'Boundary Group Site System',
+
+       a7.SMSSiteCode as 'Boundary Group SMS Site Code'
+
+from
+
+       v_RA_System_IPAddresses a1
+
+       left join
+
+              BoundaryEx a2 on (CONVERT(bigint, CAST( PARSENAME( LEFT(a1.IP_Addresses0, LEN('%.%.%.%.%.%.%') - patIndex(',', a1.IP_Addresses0)) , 1 ) as int)) + CONVERT(bigint, CAST( PARSENAME( LEFT(a1.IP_Addresses0, LEN('%.%.%.%.%.%.%') - patIndex(',', a1.IP_Addresses0)) , 2 ) as int)) * 256 + CONVERT(bigint, CAST( PARSENAME( LEFT(a1.IP_Addresses0, LEN('%.%.%.%.%.%.%') - patIndex(',', a1.IP_Addresses0)) , 3 ) as int)) * 65536 + CONVERT(bigint, CAST( PARSENAME( LEFT(a1.IP_Addresses0, LEN('%.%.%.%.%.%.%') - patIndex(',', a1.IP_Addresses0)) , 4 ) AS int )) * 16777216) >= a2.NumericValueLow and (CONVERT(bigint, CAST( PARSENAME( LEFT(a1.IP_Addresses0, LEN('%.%.%.%.%.%.%') - patIndex(',', a1.IP_Addresses0)) , 1 ) as int)) + CONVERT(bigint, CAST( PARSENAME( LEFT(a1.IP_Addresses0, LEN('%.%.%.%.%.%.%') - patIndex(',', a1.IP_Addresses0)) , 2 ) as int)) * 256 + CONVERT(bigint, CAST( PARSENAME( LEFT(a1.IP_Addresses0, LEN('%.%.%.%.%.%.%') - patIndex(',', a1.IP_Addresses0)) , 3 ) as int)) * 65536 + CONVERT(bigint, CAST( PARSENAME( LEFT(a1.IP_Addresses0, LEN('%.%.%.%.%.%.%') - patIndex(',', a1.IP_Addresses0)) , 4 ) AS int )) * 16777216) <= a2.NumericValueHigh
+
+       left join
+
+              BoundaryGroupMembers a3 on a2.BoundaryID = a3.BoundaryID
+
+       left join
+
+              BoundaryGroup a4 on a3.GroupID = a4.GroupID
+
+       left join
+
+              v_r_system a5 on a1.ResourceID = a5.ResourceID
+
+       left join
+
+              BoundaryGroupSiteSystem a6 on a4.GroupID = a6.GroupID
+
+       left join
+
+              DistributionPoints a7 on a6.ServerNALPath = a7.NALPath
+
+where
+
+       IP_Addresses0 not like '%:%' and
+
+       IP_Addresses0 not like '192.168.1.%'
